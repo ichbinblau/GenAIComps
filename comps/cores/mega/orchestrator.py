@@ -81,7 +81,7 @@ class ServiceOrchestrator(DAG):
             logger.info(initial_inputs)
 
         req_start = time.time()
-        timeout = aiohttp.ClientTimeout(total=1000)
+        timeout = aiohttp.ClientTimeout(total=10000)
         async with aiohttp.ClientSession(trust_env=True, timeout=timeout) as session:
             pending = {
                 asyncio.create_task(
@@ -192,7 +192,7 @@ class ServiceOrchestrator(DAG):
                 headers={"Content-type": "application/json"},
                 proxies={"http": None},
                 stream=True,
-                timeout=1000,
+                timeout=10000,
             )
             downstream = runtime_graph.downstream(cur_node)
             if downstream:
@@ -248,7 +248,7 @@ class ServiceOrchestrator(DAG):
                 input_data = {k: v for k, v in input_data.items() if v is not None}
             else:
                 input_data = inputs
-            async with session.post(endpoint, json=input_data) as response:
+            async with session.post(endpoint, json=input_data, timeout=10000) as response:
                 if response.content_type == "audio/wav":
                     audio_data = await response.read()
                     data = self.align_outputs(

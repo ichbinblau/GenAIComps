@@ -67,7 +67,7 @@ class GraphRAGStore(Neo4jPropertyGraphStore):
     # https://github.com/run-llama/llama_index/blob/main/docs/docs/examples/cookbooks/GraphRAG_v2.ipynb
     community_summary = {}
     entity_info = None
-    max_cluster_size = 5
+    max_cluster_size = 20
 
     def __init__(self, username: str, password: str, url: str, llm: LLM):
         super().__init__(username=username, password=password, url=url)
@@ -471,12 +471,13 @@ def ingest_data_to_neo4j(doc_path: DocPath):
             model_name=llm_name,
             temperature=0.7,
             max_tokens=1512,  # 512otherwise too shor
+            timeout=6000,  # timeout in seconds
         )
         emb_name = get_model_name_from_tgi_endpoint(TEI_EMBEDDING_ENDPOINT)
         embed_model = TextEmbeddingsInference(
             base_url=TEI_EMBEDDING_ENDPOINT,
             model_name=emb_name,
-            timeout=60,  # timeout in seconds
+            timeout=6000,  # timeout in seconds
             embed_batch_size=10,  # batch size for embedding
         )
     Settings.embed_model = embed_model
@@ -484,7 +485,7 @@ def ingest_data_to_neo4j(doc_path: DocPath):
     kg_extractor = GraphRAGExtractor(
         llm=llm,
         extract_prompt=KG_TRIPLET_EXTRACT_TMPL,
-        max_paths_per_chunk=2,
+        max_paths_per_chunk=6,
         parse_fn=parse_fn,
     )
     graph_store = GraphRAGStore(username=NEO4J_USERNAME, password=NEO4J_PASSWORD, url=NEO4J_URL, llm=llm)
